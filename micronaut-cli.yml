@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: net.miiingle.media.service
+testFramework: spock
+sourceLanguage: java
+buildTool: gradle
+features: [annotation-api, app-name, aws-v2-sdk, gradle, http-client, java, java-application, logback, lombok, netty-server, readme, shade, spock, yaml]
