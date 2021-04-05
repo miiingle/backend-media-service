@@ -1,32 +1,44 @@
 package net.miiingle.media.service;
 
+import com.amazonaws.auth.PEM;
 import com.amazonaws.services.cloudfront.CloudFrontUrlSigner;
-import com.amazonaws.services.cloudfront.util.SignerUtils;
 import com.amazonaws.util.DateUtils;
+import com.amazonaws.util.StringInputStream;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 import javax.inject.Singleton;
-import java.io.File;
+import java.security.PrivateKey;
 import java.util.Date;
 
+@RequiredArgsConstructor
 @Singleton
 public class UrlSignerService {
+
+    private final Config config;
 
     /**
      * doc:
      * https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/cloudfront/CloudFrontUrlSigner.html
      */
     @SneakyThrows
-    public String signUrl() {
+    public String signUrl(String s3ObjectPath) {
 
-        String distributionDomain = "dxxxxxxxx.cloudfront.net";
-        File privateKeyFile = new File("/Users/startupbuilder/Developer/miiingle-media-service/src/test/resources/cloudfront-signer/private_key.pem");
-        String s3ObjectKey = "README.md";
-        String keyPairId = "KYIPxxxxxxxx";
-        Date dateLessThan = DateUtils.parseISO8601Date("2021-04-05T22:20:00.000Z");
+        PrivateKey privateKey = PEM.readPrivateKey(new StringInputStream(config.getPrivateKey()));
 
         return CloudFrontUrlSigner.getSignedURLWithCannedPolicy(
-                SignerUtils.Protocol.https, distributionDomain, privateKeyFile,
-                s3ObjectKey, keyPairId, dateLessThan);
+                calculatePathForObject(s3ObjectPath),
+                config.getKeyPairId(),
+                privateKey,
+                calculateExpiry());
+    }
+
+    private String calculatePathForObject(String s3ObjectPath) {
+        return String.format("https://%s/%s", config.getDistributionDomain(), s3ObjectPath);
+    }
+
+    private Date calculateExpiry() {
+        //TODO: do something
+        return DateUtils.parseISO8601Date("2021-04-07T22:20:00.000Z");
     }
 }
